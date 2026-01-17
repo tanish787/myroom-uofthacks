@@ -32,14 +32,34 @@ export interface ChatMessage {
 }
 
 export interface AppState {
+  user: { email: string; token: string } | null;
+  showAuth: boolean;
+  showListingCreator: boolean;
   image: string | null;
   roomData: RoomData | null;
   toolbox: VoxelObject[];
   isProcessing: boolean;
-  processingMode: 'room' | 'object' | 'chat';
+  processingMode: 'room' | 'object' | 'chat' | 'marketplace' | 'search';
   selectedObjectId: string | null;
   selectedPartIndex: number | null;
   error: string | null;
   roomSizeFeet: number;
   chatHistory: ChatMessage[];
+  marketplaceItems: MarketplaceItem[];
+  searchResults: VoxelObject[];
+  isSearching: boolean;
+}
+
+export interface MarketplaceItem {
+  _id?: string;
+  id?: string;
+  name: string;
+  price: string;
+  description?: string;
+  imageUrl?: string;
+  color: string;
+  type: string;
+  creator: string;
+  data: VoxelObject;
+  createdAt?: string;
 }
