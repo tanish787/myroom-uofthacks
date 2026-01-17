@@ -19,7 +19,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { AppState, VoxelObject, ChatMessage, RoomData } from './types';
-import { analyzeRoomImage, analyzeSingleObject, autoDecorate } from './services/geminiService';
+import { analyzeRoomImage, analyzeSingleObject, autoDecorate, refineObject } from './services/geminiService';
 import VoxelScene from './components/VoxelScene';
 
 const App: React.FC = () => {
@@ -121,12 +121,37 @@ const App: React.FC = () => {
     try {
       if (state.processingMode === 'room') {
         const data = await analyzeRoomImage(state.image, state.roomSizeFeet);
-        setState(prev => ({ ...prev, roomData: data, isProcessing: false }));
+        
+        // Auto-refine each object in the room
+        const refinedObjects = await Promise.all(
+          (data.objects || []).map(async (obj) => {
+            try {
+              // Note: Room image is passed for context, but refinement focus is the object JSON
+              return await refineObject(state.image!, obj);
+            } catch (e) {
+              return obj; // Fallback to original
+            }
+          })
+        );
+
+        setState(prev => ({ 
+          ...prev, 
+          roomData: { ...data, objects: refinedObjects }, 
+          isProcessing: false 
+        }));
       } else {
         const spawnPos: [number, number, number] = [state.roomSizeFeet / 2, 0.5, state.roomSizeFeet / 2];
-        const object = await analyzeSingleObject(state.image, spawnPos);
-        setState(prev => ({
-          ...prev,
+        let object = await analyzeSingleObject(state.image, spawnPos);
+        
+        // Immediate refinement pass
+        try {
+          object = await refineObject(state.image, object);
+        } catch (e) {
+          console.warn("Refinement failed, using initial generation");
+        }
+
+        setState(prev => ({ 
+          ...prev, 
           toolbox: [...(prev.toolbox || []), object],
           isProcessing: false,
           image: null

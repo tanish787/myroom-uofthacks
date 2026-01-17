@@ -114,6 +114,21 @@ const DECORATION_SCHEMA = {
   }
 };
 
+const REFINEMENT_PROMPT = (objectJson: string) => `
+You are a Quality Control Agent for 3D Voxel Assets.
+Current Object Data: ${objectJson}
+
+Evaluate this object's geometry and color:
+1. Are structural parts (legs, arms, supports) connected to the main body?
+2. Is the vertical stacking logical (e.g., table tops shouldn't float)?
+3. Are the proportions realistic (e.g., a chair back shouldn't be 10ft tall)?
+4. Is the color palette cohesive?
+
+If there are issues, fix the 'parts' array. Move, resize, or add parts to ensure a high-quality, professional voxel look.
+Ensure the object is centered at [0, 0, 0] offset-wise (relative to its position).
+Return the corrected JSON.
+`;
+
 async function callOpenRouter(base64Image: string | null, prompt: string, model: string, schema: any): Promise<any> {
   const content: any[] = [{ type: 'text', text: `${prompt}\n\nYou MUST respond with valid JSON matching this schema:\n${JSON.stringify(schema, null, 2)}` }];
   
@@ -225,6 +240,29 @@ export const autoDecorate = async (roomData: RoomData, userRequest: string): Pro
     return result;
   } catch (error) {
     console.error("Auto Decorate Error:", error);
+    throw error;
+  }
+};
+
+export const refineObject = async (base64Image: string, object: VoxelObject): Promise<VoxelObject> => {
+  try {
+    const result = await callOpenRouter(
+      base64Image,
+      REFINEMENT_PROMPT(JSON.stringify(object)),
+      'google/gemini-3-flash-preview',
+      OBJECT_SCHEMA
+    );
+
+    return {
+      ...object,
+      ...result,
+      id: object.id, // Preserve ID
+      position: object.position, // Preserve position
+      rotation: object.rotation, // Preserve rotation
+      visible: true
+    };
+  } catch (error) {
+    console.error("Refinement Error:", error);
     throw error;
   }
 };
