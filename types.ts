@@ -26,14 +26,20 @@ export interface RoomData {
   };
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface AppState {
   image: string | null;
   roomData: RoomData | null;
   toolbox: VoxelObject[];
   isProcessing: boolean;
-  processingMode: 'room' | 'object';
+  processingMode: 'room' | 'object' | 'chat';
   selectedObjectId: string | null;
   selectedPartIndex: number | null;
   error: string | null;
   roomSizeFeet: number;
+  chatHistory: ChatMessage[];
 }

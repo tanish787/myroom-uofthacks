@@ -89,7 +89,43 @@ const OBJECT_SCHEMA = {
   required: ["name", "type", "parts"]
 };
 
-async function callOpenRouter(base64Image: string, prompt: string, model: string, schema: any): Promise<any> {
+const DECORATION_PROMPT = (roomJson: string, userRequest: string) => `
+You are an expert interior designer and 3D voxel artist.
+Current Room Data: ${roomJson}
+User Request: ${userRequest}
+
+Your task is to analyze the room and the user's request, then suggest modifications.
+You can ADD, REMOVE, or MODIFY objects.
+For NEW objects, provide full VoxelObject definitions.
+For REMOVALS, specify the IDs.
+For MODIFICATIONS, provide the updated VoxelObject.
+
+Always maintain the 1 unit = 1 foot scale and ensure objects are placed realistically.
+Return JSON with three optional arrays: 'add', 'remove' (IDs), and 'update'.
+`;
+
+const DECORATION_SCHEMA = {
+  type: "object",
+  properties: {
+    add: { type: "array", items: OBJECT_SCHEMA },
+    remove: { type: "array", items: { type: "string" } },
+    update: { type: "array", items: { ...OBJECT_SCHEMA, properties: { ...OBJECT_SCHEMA.properties, id: { type: "string" } } } },
+    assistantMessage: { type: "string" }
+  }
+};
+
+async function callOpenRouter(base64Image: string | null, prompt: string, model: string, schema: any): Promise<any> {
+  const content: any[] = [{ type: 'text', text: `${prompt}\n\nYou MUST respond with valid JSON matching this schema:\n${JSON.stringify(schema, null, 2)}` }];
+  
+  if (base64Image) {
+    content.push({
+      type: 'image_url',
+      image_url: {
+        url: base64Image
+      }
+    });
+  }
+
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
@@ -103,18 +139,7 @@ async function callOpenRouter(base64Image: string, prompt: string, model: string
       messages: [
         {
           role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `${prompt}\n\nYou MUST respond with valid JSON matching this schema:\n${JSON.stringify(schema, null, 2)}`
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: base64Image
-              }
-            }
-          ]
+          content: content
         }
       ],
       response_format: { type: "json_object" },
@@ -128,13 +153,13 @@ async function callOpenRouter(base64Image: string, prompt: string, model: string
   }
 
   const data = await response.json();
-  const content = data.choices[0]?.message?.content;
+  const contentResponse = data.choices[0]?.message?.content;
 
-  if (!content) {
+  if (!contentResponse) {
     throw new Error('No content in response');
   }
 
-  return JSON.parse(content);
+  return JSON.parse(contentResponse);
 }
 
 export const analyzeRoomImage = async (base64Image: string, sizeFeet: number): Promise<RoomData> => {
@@ -185,6 +210,21 @@ export const analyzeSingleObject = async (base64Image: string, spawnPosition: [n
     };
   } catch (error) {
     console.error("OpenRouter Error:", error);
+    throw error;
+  }
+};
+
+export const autoDecorate = async (roomData: RoomData, userRequest: string): Promise<any> => {
+  try {
+    const result = await callOpenRouter(
+      null,
+      DECORATION_PROMPT(JSON.stringify(roomData), userRequest),
+      'google/gemini-3-flash-preview',
+      DECORATION_SCHEMA
+    );
+    return result;
+  } catch (error) {
+    console.error("Auto Decorate Error:", error);
     throw error;
   }
 };

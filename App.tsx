@@ -13,10 +13,13 @@ import {
   Archive,
   PackagePlus,
   PlusCircle,
-  Shapes
+  Shapes,
+  Send,
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
-import { AppState, VoxelObject } from './types';
-import { analyzeRoomImage, analyzeSingleObject } from './services/geminiService';
+import { AppState, VoxelObject, ChatMessage, RoomData } from './types';
+import { analyzeRoomImage, analyzeSingleObject, autoDecorate } from './services/geminiService';
 import VoxelScene from './components/VoxelScene';
 
 const App: React.FC = () => {
@@ -29,8 +32,77 @@ const App: React.FC = () => {
     selectedObjectId: null,
     selectedPartIndex: null,
     error: null,
-    roomSizeFeet: 12
+    roomSizeFeet: 12,
+    chatHistory: []
   });
+
+  const [chatInput, setChatInput] = useState('');
+
+  const handleChat = async () => {
+    if (!chatInput.trim() || !state.roomData || state.isProcessing) return;
+    
+    const userMessage: ChatMessage = { role: 'user', content: chatInput };
+    setState(prev => ({ 
+      ...prev, 
+      chatHistory: [...prev.chatHistory, userMessage],
+      isProcessing: true,
+      error: null 
+    }));
+    setChatInput('');
+
+    try {
+      const result = await autoDecorate(state.roomData, chatInput);
+      
+      const assistantMessage: ChatMessage = { 
+        role: 'assistant', 
+        content: result.assistantMessage || "I've updated your room based on your request!" 
+      };
+
+      setState(prev => {
+        if (!prev.roomData) return prev;
+        
+        let newObjects = [...prev.roomData.objects];
+        
+        // Remove objects
+        if (result.remove) {
+          newObjects = newObjects.filter(obj => !result.remove.includes(obj.id));
+        }
+        
+        // Update objects
+        if (result.update) {
+          newObjects = newObjects.map(obj => {
+            const update = result.update.find((u: any) => u.id === obj.id);
+            return update ? { ...obj, ...update } : obj;
+          });
+        }
+        
+        // Add objects
+        if (result.add) {
+          const added = result.add.map((obj: any, idx: number) => ({
+            ...obj,
+            id: obj.id || `ai-add-${Date.now()}-${idx}`,
+            visible: true,
+            position: obj.position || [prev.roomSizeFeet/2, 0.5, prev.roomSizeFeet/2]
+          }));
+          newObjects = [...newObjects, ...added];
+        }
+
+        return {
+          ...prev,
+          roomData: { ...prev.roomData, objects: newObjects },
+          chatHistory: [...prev.chatHistory, assistantMessage],
+          isProcessing: false
+        };
+      });
+    } catch (err: any) {
+      setState(prev => ({ 
+        ...prev, 
+        isProcessing: false, 
+        error: "Chat error: " + err.message,
+        chatHistory: [...prev.chatHistory, { role: 'assistant', content: "Sorry, I had trouble processing that request." }]
+      }));
+    }
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -228,21 +300,77 @@ const App: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto p-5 space-y-8 custom-scrollbar">
               <div className="flex p-1 bg-slate-900 rounded-2xl border border-slate-800">
-                <button
+                <button 
                   onClick={() => setState(prev => ({ ...prev, processingMode: 'room' }))}
                   className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase transition-all ${state.processingMode === 'room' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                 >
-                  Scan Room
+                  Room
                 </button>
-                <button
+                <button 
                   onClick={() => setState(prev => ({ ...prev, processingMode: 'object' }))}
                   className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase transition-all ${state.processingMode === 'object' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                 >
-                  Scan Object
+                  Object
+                </button>
+                <button 
+                  onClick={() => setState(prev => ({ ...prev, processingMode: 'chat' }))}
+                  className={`flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase transition-all ${state.processingMode === 'chat' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  Chat
                 </button>
               </div>
 
-              {!state.roomData && !state.isProcessing && (
+              {state.processingMode === 'chat' && (
+                <section className="flex flex-col h-[400px] space-y-4">
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                    {state.chatHistory.length === 0 && (
+                      <div className="text-center py-8 opacity-40">
+                        <MessageSquare className="w-8 h-8 mx-auto mb-2" />
+                        <p className="text-[10px] font-black uppercase">Start a design conversation</p>
+                      </div>
+                    )}
+                    {state.chatHistory.map((msg, i) => (
+                      <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] p-3 rounded-2xl text-[11px] font-medium leading-relaxed ${
+                          msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
+                        }`}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                    {state.isProcessing && (
+                      <div className="flex justify-start">
+                        <div className="bg-slate-800 p-3 rounded-2xl rounded-tl-none border border-slate-700 animate-pulse">
+                          <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleChat()}
+                      placeholder="e.g. 'Add a cozy rug and a plant'"
+                      className="w-full bg-slate-900 border border-slate-800 text-white text-[11px] p-4 pr-12 rounded-2xl focus:outline-none focus:border-indigo-500 transition-all"
+                    />
+                    <button 
+                      onClick={handleChat}
+                      disabled={!state.roomData || state.isProcessing}
+                      className="absolute right-2 top-2 p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all disabled:opacity-50"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {state.processingMode !== 'chat' && !state.roomData && !state.isProcessing && (
                 <section className="space-y-4">
                   <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                     {state.processingMode === 'room' ? 'Capture Environment' : 'Capture Detail Item'}
