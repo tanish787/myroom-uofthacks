@@ -1,0 +1,7 @@
+{
+  "name": "VoxelRoom Architect",
+  "description": "Transform real-life room photos into modular, 3D voxel-style environments using Gemini AI and React Three Fiber.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
