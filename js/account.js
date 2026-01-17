@@ -3,20 +3,24 @@ const accountBtn = document.getElementById('accountBtn');
 const closeBtn = document.querySelector('.close');
 
 // Open account modal
-accountBtn.onclick = async () => {
-  modal.style.display = 'block';
-  if (authManager.isLoggedIn()) {
-    await loadUserProfile();
-  } else {
-    document.getElementById('notLoggedIn').style.display = 'block';
-    document.getElementById('loggedInContent').style.display = 'none';
-  }
-};
+if (accountBtn) {
+  accountBtn.onclick = async () => {
+    modal.style.display = 'block';
+    if (authManager.isLoggedIn()) {
+      await loadUserProfile();
+    } else {
+      document.getElementById('notLoggedIn').style.display = 'block';
+      document.getElementById('loggedInContent').style.display = 'none';
+    }
+  };
+}
 
 // Close modal
-closeBtn.onclick = () => {
-  modal.style.display = 'none';
-};
+if (closeBtn) {
+  closeBtn.onclick = () => {
+    modal.style.display = 'none';
+  };
+}
 
 // Close when clicking outside
 window.onclick = (event) => {
@@ -53,6 +57,7 @@ function displaySavedRooms(rooms) {
     div.innerHTML = `
       <strong>${room.roomName}</strong>
       <p>${new Date(room.savedAt).toLocaleDateString()}</p>
+      <button onclick="loadSavedRoom('${room.roomName}')" class="load-room-btn">Load Room</button>
     `;
     roomsList.appendChild(div);
   });
@@ -69,7 +74,7 @@ function displayListedItems(items) {
     const div = document.createElement('div');
     div.className = 'item-card';
     div.innerHTML = `
-      <img src="${item.itemImage}" alt="${item.itemName}" style="width:100px;">
+      <img src="http://localhost:5000${item.itemImage}" alt="${item.itemName}" style="width:100px;">
       <h4>${item.itemName}</h4>
       <p>${item.itemDescription}</p>
       <p><strong>$${item.itemPrice}</strong></p>
@@ -111,6 +116,6 @@ async function handleItemUpload() {
 function handleLogout() {
   if (confirm('Are you sure you want to logout?')) {
     authManager.logout();
-    window.location.href = 'auth.html';
+    location.reload();
   }
 }

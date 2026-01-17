@@ -101,22 +101,21 @@ function createObject(type, color, position) {
             geometry = new THREE.BoxGeometry(5, 5, 5);
             break;
         case 'sphere':
-            geometry = new THREE.SphereGeometry(3, 16, 16); // Sphere shape
+            geometry = new THREE.SphereGeometry(3, 16, 16);
             break;
         case 'cylinder':
-            geometry = new THREE.CylinderGeometry(3, 3, 6, 16); // Cylinder shape
+            geometry = new THREE.CylinderGeometry(3, 3, 6, 16);
             break;
         case 'cone':
-            geometry = new THREE.ConeGeometry(3, 6, 16); // Cone shape
+            geometry = new THREE.ConeGeometry(3, 6, 16);
             break;
         default:
             geometry = new THREE.BoxGeometry(5, 5, 5);
     }
     
-    // Cartoon-like material: flat colors, no shadows
     const material = new THREE.MeshLambertMaterial({
         color: color,
-        flatShading: true // Flat shading for cartoon look
+        flatShading: true
     });
     
     const mesh = new THREE.Mesh(geometry, material);
@@ -124,7 +123,8 @@ function createObject(type, color, position) {
     mesh.castShadow = false;
     mesh.receiveShadow = false;
     
-    // Store object type/name for tooltip and panel
+    // IMPORTANT: Mark as game object for save functionality
+    mesh.userData.isGameObject = true;
     mesh.userData.type = type;
     mesh.userData.name = type;
     mesh.userData.color = color;
@@ -845,6 +845,110 @@ function setupRoomNameEditing() {
             roomNameInput.value = savedName;
         }
     }
+}
+
+// Add this function to capture the current room state
+function getCurrentRoomState() {
+  const roomState = {
+    objects: [],
+    roomName: document.getElementById('room-name-input')?.value || 'My Room'
+  };
+
+  // Iterate through all objects in the scene and capture their properties
+  objects.forEach(child => {
+    roomState.objects.push({
+      type: child.userData.type,
+      position: {
+        x: child.position.x,
+        y: child.position.y,
+        z: child.position.z
+      },
+      rotation: {
+        x: child.rotation.x,
+        y: child.rotation.y,
+        z: child.rotation.z
+      },
+      scale: {
+        x: child.scale.x,
+        y: child.scale.y,
+        z: child.scale.z
+      },
+      color: child.userData.color
+    });
+  });
+
+  return roomState;
+}
+
+// Function to load a saved room state
+function loadRoomState(roomState) {
+  // Remove all existing objects from the scene
+  const objectsToRemove = [];
+  objects.forEach(obj => {
+    scene.remove(obj);
+    obj.geometry.dispose();
+    obj.material.dispose();
+    objectsToRemove.push(obj);
+  });
+  
+  // Clear objects array
+  objects.length = 0;
+  objectData.length = 0;
+
+  // Recreate objects from saved state
+  roomState.objects.forEach(objData => {
+    let geometry;
+
+    switch(objData.type) {
+      case 'cube':
+        geometry = new THREE.BoxGeometry(5, 5, 5);
+        break;
+      case 'sphere':
+        geometry = new THREE.SphereGeometry(3, 16, 16);
+        break;
+      case 'cylinder':
+        geometry = new THREE.CylinderGeometry(3, 3, 6, 16);
+        break;
+      case 'cone':
+        geometry = new THREE.ConeGeometry(3, 6, 16);
+        break;
+      default:
+        geometry = new THREE.BoxGeometry(5, 5, 5);
+    }
+
+    const material = new THREE.MeshLambertMaterial({ 
+      color: objData.color,
+      flatShading: true
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.set(objData.position.x, objData.position.y, objData.position.z);
+    mesh.rotation.set(objData.rotation.x, objData.rotation.y, objData.rotation.z);
+    mesh.scale.set(objData.scale.x, objData.scale.y, objData.scale.z);
+
+    mesh.userData.isGameObject = true;
+    mesh.userData.type = objData.type;
+    mesh.userData.color = objData.color;
+    mesh.userData.name = objData.type;
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+
+    objects.push(mesh);
+    scene.add(mesh);
+    
+    // Recreate object data
+    objectData.push({
+      name: objData.type,
+      seller: getRandomSellerName(),
+      rating: getRandomRating(),
+      price: getRandomPrice(),
+      phone: `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+      email: `user${Math.floor(Math.random() * 10000)}@example.com`
+    });
+  });
+  
+  // Update items panel
+  createItemsPanel();
 }
 
 // Animation loop

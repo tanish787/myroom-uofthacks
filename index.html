@@ -35,7 +35,6 @@
             font-size: 14px;
             z-index: 100;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            /* border: 3px solid #90EE90; */
             min-width: 200px;
         }
 
@@ -220,7 +219,6 @@
             text-transform: capitalize;
         }
 
-
         .item-price {
             font-size: 20px;
             font-weight: bold;
@@ -277,7 +275,6 @@
             transform: translateY(0);
         }
 
-        /* Checkout Modal */
         #checkout-modal {
             display: none;
             position: fixed;
@@ -449,6 +446,28 @@
             cursor: not-allowed;
         }
 
+        /* Account Button - moved to TOP RIGHT */
+        .account-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #667eea;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .account-btn:hover {
+            transform: scale(1.1);
+        }
+
         #room-controls {
             position: absolute;
             bottom: 20px;
@@ -456,11 +475,12 @@
             width: 240px;
             color: #ffffff;
             background: #1a6b1a;
-            /* border: 4px solid #90EE90; */
             border-radius: 25px;
             padding: 18px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             z-index: 150;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         #room-controls h3 {
@@ -502,17 +522,14 @@
         .room-color-picker {
             width: 60px;
             height: 35px;
-            /* border: 3px solid #228B22; */
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.2s;
-            /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); */
         }
 
         .room-color-picker:hover {
             transform: scale(1.1);
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-            border-width: 4px;
         }
 
         .color-palette {
@@ -552,7 +569,6 @@
         .color-picker:hover {
             transform: scale(1.15);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border-width: 5px;
         }
 
         .color-picker.selected {
@@ -618,511 +634,273 @@
             cursor: pointer;
             transition: all 0.2s;
             box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            margin-top: 10px;
         }
 
         #generate-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(102, 126, 234, 0.5);
-            border-width: 4px;
         }
 
         #generate-btn:active {
             transform: translateY(0);
         }
 
-        /* Account Button and Modal */
-        .account-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #1a6b1a;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            color: #ffffff;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-            z-index: 200;
-        }
-
-        .account-btn:hover {
-            background: #86f300;
-            transform: scale(1.1);
-        }
-
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
+            z-index: 1000;
             left: 0;
+            top: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 3000;
-            justify-content: center;
-            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
         }
 
         .modal-content {
-            background: #ffffff;
-            border-radius: 12px;
+            background-color: white;
+            margin: 5% auto;
             padding: 30px;
-            max-width: 500px;
+            border-radius: 12px;
             width: 90%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
-        .close {
-            color: #aaa;
+        .close, .close-save {
+            color: #999;
             float: right;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
         }
 
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        h2 {
-            margin: 0 0 15px 0;
-            color: #1a6b1a;
-            font-size: 22px;
-            text-align: center;
+        .close:hover, .close-save:hover {
+            color: #333;
         }
 
         .account-section {
-            margin-bottom: 20px;
-        }
-
-        .account-section p {
-            margin: 5px 0;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 12px;
-            background: #228B22;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .login-btn:hover {
-            background: #1a6b1a;
+            margin: 20px 0;
         }
 
         .user-info {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
             margin-bottom: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 6px;
         }
 
         .user-info p {
-            margin: 5px 0;
-            color: #333;
-            font-size: 14px;
+            margin: 8px 0;
         }
 
         .tabs {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
-            flex: 1;
-            padding: 10px;
-            margin: 0 5px;
-            background: #1a6b1a;
-            color: #ffffff;
+            padding: 10px 20px;
+            background: none;
             border: none;
-            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            transition: background 0.2s;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
         }
 
-        .tab-btn:hover {
-            background: #86f300;
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
         }
 
         .tab-content {
             display: none;
+            padding: 20px 0;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        #savedRoomsList,
-        #listedItemsList {
+        .tab-content input,
+        .tab-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        .tab-content button {
+            width: 100%;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
             margin-top: 10px;
         }
 
-        /* Checkout Modal */
-        #checkout-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+        .tab-content button:hover {
+            background: #5568d3;
         }
 
-        #checkout-modal.active {
-            display: flex;
-        }
-
-        .checkout-content {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .checkout-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-        }
-
-        .checkout-header h2 {
-            margin: 0;
-            color: #1a6b1a;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .close-btn:hover {
-            color: #333;
-        }
-
-        .seller-info {
-            background: #f5f5f5;
+        .room-item, .item-card {
             padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
         }
 
-        .seller-info h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 16px;
+        .item-card img {
+            width: 100%;
+            max-width: 200px;
+            border-radius: 6px;
+            margin-bottom: 10px;
         }
 
-        .seller-info p {
-            margin: 5px 0;
-            color: #666;
-        }
-
-        .payment-section {
-            margin-bottom: 20px;
-        }
-
-        .payment-section h3 {
-            margin: 0 0 15px 0;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group input {
+        .load-room-btn {
             width: 100%;
             padding: 10px;
-            border: 2px solid #ddd;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .load-room-btn:hover {
+            background: #5568d3;
+        }
+
+        .logout-btn, .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .login-btn {
+            background: #667eea;
+        }
+
+        .logout-btn:hover {
+            background: #b71c1c;
+        }
+
+        .login-btn:hover {
+            background: #5568d3;
+        }
+
+        /* Save Room Button */
+        #saveRoomBtn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        #saveRoomBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Save Room Modal */
+        #saveRoomModal input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 14px;
             box-sizing: border-box;
         }
 
-        .form-group input:focus {
+        #saveRoomModal input:focus {
             outline: none;
-            border-color: #228B22;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.2);
         }
 
-        .order-summary {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .order-summary h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .order-total {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 2px solid #228B22;
-            font-weight: bold;
-            font-size: 18px;
-            color: #1a6b1a;
-        }
-
-        .confirm-btn {
+        .confirm-save-btn, .cancel-save-btn {
             width: 100%;
             padding: 12px;
-            background: #228B22;
-            color: white;
+            margin: 10px 0;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s;
         }
 
-        .confirm-btn:hover {
-            background: #1a6b1a;
+        .confirm-save-btn {
+            background: #667eea;
+            color: white;
         }
 
-        .confirm-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        .confirm-save-btn:hover {
+            background: #5568d3;
         }
 
-        #room-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 240px;
-            color: #ffffff;
-            background: #1a6b1a;
-            /* border: 4px solid #90EE90; */
-            border-radius: 25px;
-            padding: 18px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            z-index: 150;
+        .cancel-save-btn {
+            background: #f5f5f5;
+            color: #333;
         }
 
-        #room-controls h3 {
-            margin: 0 0 12px 0;
-            color: #ffffff;
-            font-size: 16px;
+        .cancel-save-btn:hover {
+            background: #e0e0e0;
         }
 
-        .room-colors {
-            margin-bottom: 20px;
-        }
-
-        .room-colors h4 {
-            margin: 0 0 8px 0;
-            color: #ffffff;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .room-color-pickers {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .room-color-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ffffff;
-        }
-
-        .room-color-wrapper label {
-            font-size: 12px;
-            color: #ffffff;
-            min-width: 50px;
-        }
-
-        .room-color-picker {
-            width: 60px;
-            height: 35px;
-            /* border: 3px solid #228B22; */
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); */
-        }
-
-        .room-color-picker:hover {
-            transform: scale(1.1);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-            border-width: 4px;
-        }
-
-        .color-palette {
-            margin-bottom: 15px;
-        }
-
-        .color-palette h4 {
-            margin: 0 0 8px 0;
-            color: #ffffff;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .color-pickers {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .color-picker-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .color-picker {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #228B22;
-            border-radius: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .color-picker:hover {
-            transform: scale(1.15);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border-width: 5px;
-        }
-
-        .color-picker.selected {
-            border-color: #1a6b1a;
-            box-shadow: 0 0 0 4px rgba(34, 139, 34, 0.3);
-        }
-
-        .room-styles {
-            margin-bottom: 15px;
-        }
-
-        .room-styles h4 {
-            margin: 0 0 8px 0;
-            color: #ffffff;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .style-options {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-
-        .style-option {
+        #saveMessage {
+            margin-top: 15px;
             padding: 10px;
-            border: 3px solid #228B22;
-            border-radius: 15px;
-            background: #1a6b1a;
-            cursor: pointer;
+            border-radius: 6px;
             text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            min-height: 20px;
         }
 
-        .style-option:hover {
-            background: #ffffff;
-            border-color: #228B22;
-            color: #000000;
-            transform: scale(1.05);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        #saveMessage.success {
+            background-color: #e8f5e9;
+            color: #388e3c;
         }
 
-        .style-option.selected {
-            background: #14d414;
-            color: white;
-            border-color: #1a6b1a;
-            border-width: 4px;
-            box-shadow: 0 4px 10px rgba(34, 139, 34, 0.4);
+        #saveMessage.error {
+            background-color: #ffebee;
+            color: #d32f2f;
         }
 
-        #generate-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: 3px solid #5a67d8;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
-        }
-
-        #generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.5);
-            border-width: 4px;
-        }
-
-        #generate-btn:active {
-            transform: translateY(0);
+        h2 {
+            color: #1a6b1a;
+            font-size: 22px;
         }
     </style>
 </head>
@@ -1186,10 +964,11 @@
                 <div class="style-option" data-style="rustic">Rustic</div>
             </div>
         </div>
+        <button id="saveRoomBtn" style="width: 100%; margin-bottom: 10px;">💾 Save Room</button>
         <button id="generate-btn">Generate Room</button>
     </div>
 
-    <!-- Account Button (top right) -->
+    <!-- Account Button (moved to the left of room-controls) -->
     <button id="accountBtn" class="account-btn">👤</button>
 
     <!-- Account Modal Popup -->
@@ -1240,55 +1019,22 @@
       </div>
     </div>
 
-    <!-- Checkout Modal -->
-    <div id="checkout-modal">
-        <div class="checkout-content">
-            <div class="checkout-header">
-                <h2>Checkout</h2>
-                <button class="close-btn" id="close-checkout">×</button>
-            </div>
-            <div class="seller-info" id="seller-info">
-                <h3>Seller Information</h3>
-                <p id="seller-name"></p>
-                <p id="seller-phone"></p>
-                <p id="seller-email"></p>
-            </div>
-            <div class="order-summary" id="order-summary">
-                <h3>Order Summary</h3>
-                <div id="order-items"></div>
-                <div class="order-total">
-                    <span>Total:</span>
-                    <span id="order-total">$0</span>
-                </div>
-            </div>
-            <div class="payment-section">
-                <h3>Payment Information</h3>
-                <div class="form-group">
-                    <label for="card-name">Cardholder Name</label>
-                    <input type="text" id="card-name" placeholder="John Doe">
-                </div>
-                <div class="form-group">
-                    <label for="card-number">Card Number</label>
-                    <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="card-expiry">Expiry Date</label>
-                        <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="card-cvv">CVV</label>
-                        <input type="text" id="card-cvv" placeholder="123" maxlength="3">
-                    </div>
-                </div>
-            </div>
-            <button class="confirm-btn" id="confirm-order">Confirm & Pay</button>
-        </div>
+    <!-- Save Room Modal -->
+    <div id="saveRoomModal" class="modal">
+      <div class="modal-content">
+        <span class="close-save">&times;</span>
+        <h2>Save Your Room</h2>
+        <input type="text" id="roomNameInput" placeholder="Enter room name" required>
+        <button onclick="confirmSaveRoom()" class="confirm-save-btn">Save</button>
+        <button onclick="cancelSaveRoom()" class="cancel-save-btn">Cancel</button>
+        <div id="saveMessage"></div>
+      </div>
     </div>
 
     <!-- Auth Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/account.js"></script>
+    <script src="js/saveRoom.js"></script>
 
     <!-- Your existing game scripts -->
     <script type="importmap">
