@@ -1,9 +1,12 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -297,8 +300,6 @@ app.get('/analytics/:userId', async (req, res) => {
   }
 });
 
-
-const fetch = require('node-fetch'); // if not already installed: npm install node-fetch
 
 app.post('/api/openrouter', async (req, res) => {
   try {
