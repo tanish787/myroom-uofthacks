@@ -1161,6 +1161,7 @@ const App: React.FC = () => {
         name: marketplaceItem.name,
         source: marketplaceItem.source,
         hasImageUrl: !!marketplaceItem.imageUrl,
+        hasGeneratedData: !!marketplaceItem.data?.parts?.length,
         imageUrlLength: marketplaceItem.imageUrl?.length || 0,
         imageUrlPreview: marketplaceItem.imageUrl?.substring(0, 50) || 'NONE'
       });
@@ -1176,33 +1177,69 @@ const App: React.FC = () => {
       }
     }
     
-    // 🎨 Generate 3D model from Shopify product image
+    // 🎨 Generate 3D model from Shopify product image (only if not already generated)
     let finalToolboxObj = toolboxObj;
     if (marketplaceItem?.source === 'shopify' && marketplaceItem?.imageUrl) {
-      try {
-        console.log('🎨 Generating 3D model for Shopify product:', marketplaceItem.name);
-        setState(prev => ({ ...prev, isProcessing: true, processingMode: 'object' }));
-        
-        const { analyzeSingleObject } = await import('./services/geminiService');
-        const generatedObject = await analyzeSingleObject(marketplaceItem.imageUrl, spawnPos);
-        
-        // Merge Shopify item info with generated 3D data
+      // Check if this Shopify item already has a generated 3D model
+      const hasGeneratedData = marketplaceItem.data?.parts && marketplaceItem.data.parts.length > 1;
+      
+      if (!hasGeneratedData) {
+        try {
+          console.log('🎨 Generating 3D model for Shopify product:', marketplaceItem.name);
+          setState(prev => ({ ...prev, isProcessing: true, processingMode: 'object' }));
+          
+          const { analyzeSingleObject } = await import('./services/geminiService');
+          const generatedObject = await analyzeSingleObject(marketplaceItem.imageUrl, spawnPos);
+          
+          // Merge Shopify item info with generated 3D data
+          finalToolboxObj = {
+            ...generatedObject,
+            id: newId,
+            name: marketplaceItem.name,
+            color: generatedObject.color || marketplaceItem.color,
+            description: marketplaceItem.description || generatedObject.description,
+            isUserCreated: false
+          };
+          
+          console.log('✅ Generated 3D model for Shopify item:', finalToolboxObj);
+          
+          // 💾 Save the generated 3D model to database
+          try {
+            const response = await fetch(`http://localhost:${process.env.VITE_SERVER_PORT || 5000}/marketplace/${marketplaceItem._id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                data: generatedObject,
+                dataSynced: true
+              })
+            });
+            
+            if (response.ok) {
+              console.log('💾 Saved generated 3D model to database for:', marketplaceItem.name);
+            } else {
+              console.warn('⚠️ Failed to save 3D model to database:', response.statusText);
+            }
+          } catch (dbError) {
+            console.warn('⚠️ Could not save to database (non-critical):', dbError);
+            // Continue anyway - the model is generated even if we couldn't save
+          }
+          
+          setState(prev => ({ ...prev, isProcessing: false }));
+        } catch (error) {
+          console.error('❌ Failed to generate 3D model for Shopify item:', error);
+          // Fall back to generic 3D data if generation fails
+          setState(prev => ({ ...prev, isProcessing: false }));
+          finalToolboxObj = toolboxObj;
+        }
+      } else {
+        // Use existing generated data from database
+        console.log('♻️ Using cached 3D model from database for:', marketplaceItem.name);
         finalToolboxObj = {
-          ...generatedObject,
+          ...marketplaceItem.data,
           id: newId,
           name: marketplaceItem.name,
-          color: generatedObject.color || marketplaceItem.color,
-          description: marketplaceItem.description || generatedObject.description,
           isUserCreated: false
         };
-        
-        console.log('✅ Generated 3D model for Shopify item:', finalToolboxObj);
-        setState(prev => ({ ...prev, isProcessing: false }));
-      } catch (error) {
-        console.error('❌ Failed to generate 3D model for Shopify item:', error);
-        // Fall back to generic 3D data if generation fails
-        setState(prev => ({ ...prev, isProcessing: false }));
-        finalToolboxObj = toolboxObj;
       }
     }
     

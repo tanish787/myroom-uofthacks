@@ -393,6 +393,34 @@ app.delete('/marketplace/:id', async (req, res) => {
   }
 });
 
+// Update marketplace item with generated 3D data (for Shopify products)
+app.patch('/marketplace/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, dataSynced } = req.body;
+    
+    if (!data || !id) {
+      return res.status(400).send('Missing required fields: id, data');
+    }
+    
+    const updated = await MarketplaceItem.findByIdAndUpdate(
+      id,
+      { data, dataSynced: dataSynced || true },
+      { new: true }
+    );
+    
+    if (!updated) {
+      return res.status(404).send('Marketplace item not found');
+    }
+    
+    console.log(`🔄 [PATCH /marketplace/:id] Updated 3D data for: "${updated.name}"`);
+    res.send(updated);
+  } catch (err) {
+    console.error(`❌ [PATCH /marketplace/:id] Error:`, err.message);
+    res.status(500).send(err.message);
+  }
+});
+
 app.put('/marketplace/:id', async (req, res) => {
   try {
     const { id } = req.params;
