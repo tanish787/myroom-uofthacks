@@ -33,7 +33,7 @@ export interface ChatMessage {
 }
 
 export interface AppState {
-  user: { email: string; token: string } | null;
+  user: { email: string; token: string; userId?: string; accountType?: 'buyer' | 'seller'; shopifyLink?: string } | null;
   showAuth: boolean;
   showListingCreator: boolean;
   image: string | null;
@@ -60,6 +60,7 @@ export interface MarketplaceItem {
   imageUrl?: string;
   color: string;
   type: string;
+  style?: string; // furniture style: modern, gothic, luxury, rustic, minimalist, bohemian
   creator: string;
   data: VoxelObject;
   createdAt?: string;

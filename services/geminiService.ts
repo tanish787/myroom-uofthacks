@@ -273,3 +273,89 @@ export const refineObject = async (base64Image: string, object: VoxelObject): Pr
     throw error;
   }
 };
+export const generateRoomFromDescription = async (description: string, sizeFeet: number): Promise<RoomData> => {
+  const prompt = `
+You are an expert interior designer and 3D voxel artist.
+Based on this room description, create a complete room design in 3D voxel format.
+
+Room Description: "${description}"
+Room Size: ${sizeFeet}x${sizeFeet} feet
+${BASE_RULES}
+
+Create appropriate furniture and objects that would be found in this type of room.
+Position objects on a grid where 1 unit = 1 foot.
+Ensure all objects are positioned within the room bounds (0 to ${sizeFeet} on X and Z axes).
+Maximum wall height is 8 feet.
+
+Return JSON with wallColor, floorColor, and objects array.
+Each object should have: id (unique), name, type, position [x, y, z], rotation, color, description, and parts array.
+`;
+
+  try {
+    console.log('🔄 Calling OpenRouter API for room generation...');
+    const result = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+      }),
+    }).then(r => r.json());
+
+    console.log('📥 API Response received:', result);
+
+    if (result.error) {
+      console.error('OpenRouter API Error:', result.error);
+      throw new Error(result.error.message || 'API Error');
+    }
+
+    const content = result.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error('❌ No content in response. Full result:', result);
+      throw new Error('No content in API response');
+    }
+
+    console.log('📄 Extracted content:', content.substring(0, 200));
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('❌ No JSON found in content');
+      throw new Error('No JSON found in response');
+    }
+
+    const roomData = JSON.parse(jsonMatch[0]) as RoomData;
+    console.log('✅ JSON parsed successfully:', roomData);
+
+    // Ensure dimensions are set
+    if (!roomData.dimensions) {
+      roomData.dimensions = { width: sizeFeet, depth: sizeFeet };
+    }
+
+    // Ensure all objects are within bounds
+    roomData.objects = (roomData.objects || []).map(obj => ({
+      ...obj,
+      position: [
+        Math.max(0.5, Math.min(sizeFeet - 0.5, obj.position[0] || sizeFeet / 2)),
+        obj.position[1] || 0,
+        Math.max(0.5, Math.min(sizeFeet - 0.5, obj.position[2] || sizeFeet / 2))
+      ] as [number, number, number],
+      id: obj.id || `obj-${Date.now()}-${Math.random()}`,
+      visible: true
+    }));
+
+    console.log('✅ Final room data prepared:', roomData);
+    return roomData;
+  } catch (error) {
+    console.error('❌ Room Generation Error:', error);
+    throw error;
+  }
+};

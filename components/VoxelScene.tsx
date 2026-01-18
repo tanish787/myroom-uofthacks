@@ -21,14 +21,30 @@ const VoxelScene: React.FC<VoxelSceneProps> = ({
   const controlsRef = useRef<any>(null);
 
   // Use dimensions from roomData or default to 12x12
-  const ROOM_WIDTH = roomData.dimensions?.width || 12;
-  const ROOM_DEPTH = roomData.dimensions?.depth || 12;
+  let ROOM_WIDTH = roomData.dimensions?.width || 12;
+  let ROOM_DEPTH = roomData.dimensions?.depth || 12;
+
+  // Calculate max bounds from objects to ensure they fit
+  const maxX = Math.max(...(roomData.objects || []).map(obj => {
+    const maxPart = Math.max(...(obj.parts || []).map(p => (p.offset[0] || 0) + (p.dimensions[0] || 0)));
+    return (obj.position[0] || 0) + maxPart;
+  }), ROOM_WIDTH);
+
+  const maxZ = Math.max(...(roomData.objects || []).map(obj => {
+    const maxPart = Math.max(...(obj.parts || []).map(p => (p.offset[2] || 0) + (p.dimensions[2] || 0)));
+    return (obj.position[2] || 0) + maxPart;
+  }), ROOM_DEPTH);
+
+  // Extend room if objects exceed bounds (add 1 unit padding)
+  ROOM_WIDTH = Math.max(ROOM_WIDTH, maxX + 1);
+  ROOM_DEPTH = Math.max(ROOM_DEPTH, maxZ + 1);
+
   const HALF_WIDTH = ROOM_WIDTH / 2;
   const HALF_DEPTH = ROOM_DEPTH / 2;
   const WALL_HEIGHT = 8; // ~8 foot walls
 
   return (
-    <div className="w-full h-full bg-[#a5c9f3]">
+    <div className="w-full h-full bg-gradient-to-b from-[#a5c9f3] to-[#87CEEB]">
       <Canvas
         shadows
         orthographic
@@ -37,30 +53,43 @@ const VoxelScene: React.FC<VoxelSceneProps> = ({
       >
         <Suspense fallback={null}>
           <Environment preset="city" />
-          <ambientLight intensity={0.5} />
+          <ambientLight intensity={0.6} />
           <directionalLight
             position={[30, 60, 30]}
-            intensity={1.2}
+            intensity={1.3}
             castShadow
             shadow-mapSize={[2048, 2048]}
           />
 
           <group position={[HALF_WIDTH, 0, HALF_DEPTH]}>
+            {/* Floor */}
             <Box args={[ROOM_WIDTH + 0.5, 0.5, ROOM_DEPTH + 0.5]} position={[0, -0.25, 0]} receiveShadow>
-              <meshStandardMaterial color={roomData.floorColor || '#94a3b8'} roughness={0.8} />
+              <meshStandardMaterial 
+                color={roomData.floorColor || '#94a3b8'} 
+                roughness={0.7}
+                metalness={0.1}
+              />
               <Outlines thickness={2} color="#000000" />
             </Box>
 
-            <group position={[0, 0, -HALF_DEPTH - 0.25]}>
-              <Box args={[ROOM_WIDTH + 0.5, WALL_HEIGHT, 0.5]} position={[0, WALL_HEIGHT/2, 0]} receiveShadow>
-                <meshStandardMaterial color={roomData.wallColor || '#cbd5e1'} />
+            {/* Left wall */}
+            <group position={[-HALF_WIDTH - 0.25, 0, 0]}>
+              <Box args={[0.5, WALL_HEIGHT, ROOM_DEPTH + 0.5]} position={[0, WALL_HEIGHT/2, 0]} receiveShadow>
+                <meshStandardMaterial 
+                  color={roomData.wallColor || '#cbd5e1'}
+                  roughness={0.8}
+                />
                 <Outlines thickness={2} color="#000000" />
               </Box>
             </group>
 
-            <group position={[-HALF_WIDTH - 0.25, 0, 0]}>
-              <Box args={[0.5, WALL_HEIGHT, ROOM_DEPTH + 0.5]} position={[0, WALL_HEIGHT/2, 0]} receiveShadow>
-                <meshStandardMaterial color={roomData.wallColor || '#cbd5e1'} />
+            {/* Front wall */}
+            <group position={[0, 0, -HALF_DEPTH - 0.25]}>
+              <Box args={[ROOM_WIDTH + 0.5, WALL_HEIGHT, 0.5]} position={[0, WALL_HEIGHT/2, 0]} receiveShadow>
+                <meshStandardMaterial 
+                  color={roomData.wallColor || '#cbd5e1'}
+                  roughness={0.8}
+                />
                 <Outlines thickness={2} color="#000000" />
               </Box>
             </group>
