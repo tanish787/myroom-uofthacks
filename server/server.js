@@ -78,6 +78,7 @@ const marketplaceItemSchema = new mongoose.Schema({
   creator: { type: String, required: true },
   data: { type: Object, required: true }, // VoxelObject data
   source: { type: String, default: 'user' }, // 'user' or 'shopify'
+  shopifyLink: { type: String, default: '' }, // Link to Shopify product if from Shopify seller
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -41,7 +41,7 @@ const VoxelScene: React.FC<VoxelSceneProps> = ({
 
   const HALF_WIDTH = ROOM_WIDTH / 2;
   const HALF_DEPTH = ROOM_DEPTH / 2;
-  const WALL_HEIGHT = 8; // ~8 foot walls
+  const WALL_HEIGHT = 12; // Taller walls (~10 feet)
 
   return (
     <div className="w-full h-full bg-gradient-to-b from-[#a5c9f3] to-[#87CEEB]">

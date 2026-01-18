@@ -140,7 +140,8 @@ const App: React.FC = () => {
     price: '',
     description: '',
     style: 'modern',
-    type: 'furniture'
+    type: 'furniture',
+    shopifyLink: ''
   });
 
   // Style filter
@@ -675,6 +676,14 @@ const App: React.FC = () => {
   };
 
   const openCheckout = (item: any) => {
+    // If item has a Shopify link, redirect to Shopify instead of showing checkout
+    if (item.shopifyLink && item.shopifyLink.trim()) {
+      window.open(item.shopifyLink, '_blank');
+      console.log('🛒 Redirecting to Shopify:', item.shopifyLink);
+      return;
+    }
+    
+    // Otherwise, proceed with normal checkout
     setCheckoutItem(item);
     setCheckoutForm({
       quantity: 1,
@@ -763,6 +772,7 @@ const App: React.FC = () => {
         style: currentSellerItem.style || 'modern',
         description: currentSellerItem.description || '',
         imageUrl: currentSellerItem.imageUrl || '',
+        shopifyLink: currentSellerItem.shopifyLink || '',
         color: currentSellerItem.color || '#cbd5e1',
         data: currentSellerItem.data || {
           color: '#cbd5e1',
@@ -985,7 +995,8 @@ const App: React.FC = () => {
       price: item.price,
       description: item.description || '',
       style: item.style || 'modern',
-      type: item.type
+      type: item.type,
+      shopifyLink: item.shopifyLink || ''
     });
     setShowEditListing(true);
   };
@@ -1003,7 +1014,8 @@ const App: React.FC = () => {
           price: editForm.price,
           description: editForm.description,
           style: editForm.style,
-          type: editForm.type
+          type: editForm.type,
+          shopifyLink: editForm.shopifyLink
         })
       });
 
@@ -1859,6 +1871,18 @@ const App: React.FC = () => {
                 </select>
               </div>
 
+              <div>
+                <label className="text-sm font-black uppercase text-slate-600 mb-2 block">Shopify Link (Optional)</label>
+                <input
+                  type="url"
+                  placeholder="https://your-shop.com/products/..."
+                  value={editForm.shopifyLink}
+                  onChange={(e) => setEditForm({...editForm, shopifyLink: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:border-indigo-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">If provided, buyers will be sent here instead of checkout</p>
+              </div>
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowEditListing(false)}
@@ -2145,6 +2169,18 @@ const App: React.FC = () => {
                       onChange={(e) => setCurrentSellerItem({...currentSellerItem, description: e.target.value})}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent h-16 resize-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 block mb-1">Shopify Link (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://your-shop.com/products/..."
+                      value={currentSellerItem?.shopifyLink || ''}
+                      onChange={(e) => setCurrentSellerItem({...currentSellerItem, shopifyLink: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">If provided, buyers will be sent here instead of checkout</p>
                   </div>
                 </div>
               </div>
@@ -2593,12 +2629,23 @@ const App: React.FC = () => {
                               Add to Room
                             </button>
                           )}
-                          <button
-                            onClick={() => openCheckout(item)}
-                            className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold uppercase transition-all"
-                          >
-                            Buy
-                          </button>
+                          {item.shopifyLink ? (
+                            <a
+                              href={item.shopifyLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold uppercase transition-all flex items-center justify-center"
+                            >
+                              Buy on Shopify
+                            </a>
+                          ) : (
+                            <button
+                              onClick={() => openCheckout(item)}
+                              className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold uppercase transition-all"
+                            >
+                              Buy
+                            </button>
+                          )}
                           {state.user?.email === item.creator && (
                             <button 
                               onClick={() => openEditListing(item)}
@@ -2806,14 +2853,27 @@ const App: React.FC = () => {
                               )}
                             </button>
                           )}
-                          <button
-                            onClick={() => openCheckout(item)}
-                            className={`flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/20 ${
-                              roomItems.some(ri => ri._id === item._id) ? 'flex-none w-full' : ''
-                            }`}
-                          >
-                            <ShoppingBag className="w-4 h-4" /> Buy
-                          </button>
+                          {item.shopifyLink ? (
+                            <a
+                              href={item.shopifyLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/20 ${
+                                roomItems.some(ri => ri._id === item._id) ? 'flex-none w-full' : ''
+                              }`}
+                            >
+                              <ShoppingBag className="w-4 h-4" /> Buy on Shopify
+                            </a>
+                          ) : (
+                            <button
+                              onClick={() => openCheckout(item)}
+                              className={`flex-1 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/20 ${
+                                roomItems.some(ri => ri._id === item._id) ? 'flex-none w-full' : ''
+                              }`}
+                            >
+                              <ShoppingBag className="w-4 h-4" /> Buy
+                            </button>
+                          )}
                         </div>
                         {state.user?.email === item.creator && (
                           <button
@@ -3151,13 +3211,25 @@ const App: React.FC = () => {
                           <p className="text-[9px] text-green-600 font-semibold">${item.price}</p>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                          <button
-                            onClick={() => purchaseFromCart(item)}
-                            className="p-1 bg-green-600 hover:bg-green-500 text-white rounded transition-colors"
-                            title="Purchase this item"
-                          >
-                            <ShoppingCart className="w-3 h-3" />
-                          </button>
+                          {item.shopifyLink ? (
+                            <a
+                              href={item.shopifyLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 bg-green-600 hover:bg-green-500 text-white rounded transition-colors flex items-center justify-center"
+                              title="Purchase on Shopify"
+                            >
+                              <ShoppingCart className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <button
+                              onClick={() => purchaseFromCart(item)}
+                              className="p-1 bg-green-600 hover:bg-green-500 text-white rounded transition-colors"
+                              title="Purchase this item"
+                            >
+                              <ShoppingCart className="w-3 h-3" />
+                            </button>
+                          )}
                           <button
                             onClick={() => removeRoomItem(item._id)}
                             className="p-1 bg-red-600 hover:bg-red-500 text-white rounded transition-colors"

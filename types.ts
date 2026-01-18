@@ -65,4 +65,5 @@ export interface MarketplaceItem {
   data: VoxelObject;
   createdAt?: string;
   source?: string; // 'user' | 'shopify'
+  shopifyLink?: string; // Link to Shopify product if from Shopify seller
 }
