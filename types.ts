@@ -55,7 +55,7 @@ export interface MarketplaceItem {
   _id?: string;
   id?: string;
   name: string;
-  price: string;
+  price: number;
   description?: string;
   imageUrl?: string;
   color: string;
@@ -63,4 +63,5 @@ export interface MarketplaceItem {
   creator: string;
   data: VoxelObject;
   createdAt?: string;
+  source?: string; // 'user' | 'shopify'
 }

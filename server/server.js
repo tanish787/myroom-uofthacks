@@ -5,8 +5,14 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { fetchShopifyProducts } from '../services/shopifyService.ts';
 
-dotenv.config();
+// Load .env from project root directory
+const __filename = fileURLToPath(import.meta.url);
+const projectRoot = path.dirname(path.dirname(__filename));
+dotenv.config({ path: path.join(projectRoot, '.env') });
 
 const app = express();
 app.use(cors());
@@ -44,13 +50,14 @@ const User = mongoose.model('User', userSchema);
 
 const marketplaceItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  price: { type: String, required: true },
+  price: { type: Number, required: true },
   description: { type: String },
   imageUrl: { type: String },
   color: { type: String, required: true },
   type: { type: String, required: true },
   creator: { type: String, required: true },
   data: { type: Object, required: true }, // VoxelObject data
+  source: { type: String, default: 'user' }, // 'user' or 'shopify'
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -327,11 +334,124 @@ app.post('/api/openrouter', async (req, res) => {
   }
 });
 
+// Shopify sync endpoint - manually trigger sync
+app.post('/api/shopify/sync', async (req, res) => {
+  try {
+    console.log('🔄 [Shopify Sync] Starting manual sync...');
+    
+    const shopifyProducts = await fetchShopifyProducts();
+    
+    if (shopifyProducts.length === 0) {
+      console.log('⚠️ [Shopify Sync] No products to sync');
+      return res.status(200).send({ message: 'No products to sync', synced: 0 });
+    }
 
+    let syncedCount = 0;
+    let skippedCount = 0;
+
+    for (const product of shopifyProducts) {
+      try {
+        // Check for duplicates by name
+        const existingItem = await MarketplaceItem.findOne({ name: product.name });
+        
+        if (existingItem) {
+          console.log(`⏭️  [Shopify Sync] Skipping duplicate: ${product.name}`);
+          skippedCount++;
+          continue;
+        }
+
+        // Upsert (insert or update if exists)
+        const result = await MarketplaceItem.updateOne(
+          { name: product.name, source: 'shopify' },
+          { $set: product },
+          { upsert: true }
+        );
+
+        if (result.upsertedId) {
+          console.log(`✅ [Shopify Sync] Inserted: ${product.name}`);
+          syncedCount++;
+        } else if (result.modifiedCount > 0) {
+          console.log(`🔄 [Shopify Sync] Updated: ${product.name}`);
+          syncedCount++;
+        }
+      } catch (error) {
+        console.error(`❌ [Shopify Sync] Error syncing product ${product.name}:`, error.message);
+        skippedCount++;
+      }
+    }
+
+    console.log(`✨ [Shopify Sync] Complete: ${syncedCount} synced, ${skippedCount} skipped`);
+    res.status(200).send({ 
+      message: 'Sync completed',
+      synced: syncedCount,
+      skipped: skippedCount,
+      total: shopifyProducts.length
+    });
+  } catch (error) {
+    console.error('❌ [Shopify Sync] Error:', error.message);
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// Async function to execute Shopify sync
+async function executeShopifySync() {
+  try {
+    console.log('🔄 [Cron] Running scheduled Shopify sync...');
+    
+    const shopifyProducts = await fetchShopifyProducts();
+    
+    if (shopifyProducts.length === 0) {
+      console.log('⚠️ [Cron] No products to sync');
+      return;
+    }
+
+    let syncedCount = 0;
+    let skippedCount = 0;
+
+    for (const product of shopifyProducts) {
+      try {
+        const existingItem = await MarketplaceItem.findOne({ name: product.name });
+        
+        if (existingItem) {
+          console.log(`⏭️  [Cron] Skipping duplicate: ${product.name}`);
+          skippedCount++;
+          continue;
+        }
+
+        const result = await MarketplaceItem.updateOne(
+          { name: product.name, source: 'shopify' },
+          { $set: product },
+          { upsert: true }
+        );
+
+        if (result.upsertedId) {
+          console.log(`✅ [Cron] Inserted: ${product.name}`);
+          syncedCount++;
+        } else if (result.modifiedCount > 0) {
+          console.log(`🔄 [Cron] Updated: ${product.name}`);
+          syncedCount++;
+        }
+      } catch (error) {
+        console.error(`❌ [Cron] Error syncing product ${product.name}:`, error.message);
+        skippedCount++;
+      }
+    }
+
+    console.log(`✨ [Cron] Sync complete: ${syncedCount} synced, ${skippedCount} skipped`);
+  } catch (error) {
+    console.error('❌ [Cron] Error executing Shopify sync:', error.message);
+  }
+}
+
+// Sync Shopify products on server startup
+console.log('⏳ Running initial Shopify sync on server startup...');
+executeShopifySync();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`📊 Recommendations: http://localhost:${PORT}/recommendations/:userId`);
+  console.log(`🛒 Shopify sync (manual): POST http://localhost:${PORT}/api/shopify/sync`);
+  console.log(`⏰ Shopify sync (automatic): On server startup/reload`);
 });
