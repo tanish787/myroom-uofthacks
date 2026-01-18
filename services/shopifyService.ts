@@ -137,7 +137,7 @@ export async function fetchShopifyProducts(): Promise<TransformedShopifyItem[]> 
     `;
 
     const response = await fetch(
-      `https://${storeName}.myshopify.com/api/2024-01/graphql.json`,
+      `https://${storeName}.myshopify.com/api/2025-01/graphql.json`,
       {
         method: 'POST',
         headers: {
@@ -170,12 +170,6 @@ export async function fetchShopifyProducts(): Promise<TransformedShopifyItem[]> 
         const variant = product.variants?.edges?.[0]?.node;
         const price = variant?.priceV2?.amount ? parseFloat(variant.priceV2.amount) : 0;
         const inventoryQuantity = variant?.quantityAvailable || 0;
-
-        // Skip out-of-stock items
-        if (inventoryQuantity <= 0) {
-          console.log(`⏭️  [Shopify] Skipping out-of-stock: ${product.title}`);
-          continue;
-        }
 
         // Get image (Storefront API uses 'src' instead of 'originalSrc')
         let imageUrl = '';
