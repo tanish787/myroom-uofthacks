@@ -313,6 +313,10 @@ const App: React.FC = () => {
           const meetsCategory = selectedCategories.length === 0 || selectedCategories.includes(item.type);
           return meetsPrice && meetsCategory;
         });
+        console.log('🛍️ Marketplace items loaded:', data.length, 'items');
+        data.forEach((item: any, idx: number) => {
+          console.log(`  Item ${idx + 1}: ${item.name} - Has image: ${!!item.imageUrl} (length: ${item.imageUrl?.length || 0})`);
+        });
         setState(prev => ({ ...prev, marketplaceItems: data }));
         // Track search action
         if (state.user && s) {
@@ -350,25 +354,43 @@ const App: React.FC = () => {
 
   const createListing = async () => {
     if (!selectedObject || !state.user) return;
+    
+    // Always use the custom image if provided
+    const imageUrl = listingForm.imageUrl || null;
+    
+    if (!imageUrl) {
+      alert('Please upload an image of your item');
+      return;
+    }
+    
+    console.log('📸 Creating listing with image. Image URL length:', imageUrl.length, 'First 50 chars:', imageUrl.substring(0, 50));
+    
     try {
       const res = await fetch('http://localhost:5000/marketplace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...listingForm,
+          name: listingForm.name,
+          price: listingForm.price,
+          description: listingForm.description,
+          type: listingForm.type,
+          imageUrl: imageUrl,
           color: selectedObject.color,
           creator: state.user.email,
           data: selectedObject
         })
       });
       if (res.ok) {
+        console.log('✅ Listing created successfully');
         alert('Listing created!');
         setState(prev => ({ ...prev, showListingCreator: false }));
         setListingForm({ name: '', price: '', description: '', type: 'furniture', imageUrl: '' });
         searchMarketplace();
+      } else {
+        alert('Error creating listing');
       }
     } catch (err) {
-      alert('Error creating listing');
+      alert('Error creating listing: ' + err);
     }
   };
 
@@ -624,30 +646,52 @@ const App: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="aspect-video bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center relative overflow-hidden group">
+              <div className="space-y-2 mb-4">
+                <label className="text-sm font-black uppercase text-slate-600 ml-2 flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" /> Item Image <span className="text-red-500">*</span>
+                </label>
+                <p className="text-xs text-slate-500 ml-2">Upload a clear photo of the real item you're selling</p>
+              </div>
+              
+              <div className="aspect-video bg-gradient-to-br from-slate-50 to-slate-100 rounded-[2rem] border-2 border-dashed border-slate-300 flex flex-col items-center justify-center relative overflow-hidden group hover:border-indigo-500 transition-colors">
                 {listingForm.imageUrl ? (
-                  <img src={listingForm.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                  <>
+                    <img src={listingForm.imageUrl} className="w-full h-full object-cover" alt="Preview" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                      <label className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer bg-white text-slate-900 px-4 py-2 rounded-lg text-xs font-black uppercase flex items-center gap-2">
+                        <Camera className="w-3 h-3" /> Change Image
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (re) => setListingForm({...listingForm, imageUrl: re.target?.result as string});
+                            reader.readAsDataURL(file);
+                          }
+                        }} />
+                      </label>
+                    </div>
+                  </>
                 ) : (
-                  <VoxelScene
-                    roomData={{ objects: [{ ...selectedObject, position: [0, 0, 0], rotation: 0 }], wallColor: '#f8fafc', floorColor: '#f1f5f9', dimensions: { width: 5, depth: 5 } }}
-                    selectedObjectId={null}
-                    selectedPartIndex={null}
-                    onSelectObject={() => {}}
-                  />
+                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer gap-3">
+                    <Camera className="w-12 h-12 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                    <div className="text-center">
+                      <p className="text-sm font-black text-slate-600">Click to upload item photo</p>
+                      <p className="text-xs text-slate-500 mt-1">JPG, PNG up to 10MB</p>
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          alert('Image size must be less than 10MB');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (re) => setListingForm({...listingForm, imageUrl: re.target?.result as string});
+                        reader.readAsDataURL(file);
+                      }
+                    }} />
+                  </label>
                 )}
-                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/50 to-transparent flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                   <label className="cursor-pointer bg-white text-slate-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2">
-                     <Camera className="w-3 h-3" /> Custom Image
-                     <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-                       const file = e.target.files?.[0];
-                       if (file) {
-                         const reader = new FileReader();
-                         reader.onload = (re) => setListingForm({...listingForm, imageUrl: re.target?.result as string});
-                         reader.readAsDataURL(file);
-                       }
-                     }} />
-                   </label>
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -817,15 +861,16 @@ const App: React.FC = () => {
                       onMouseEnter={() => trackMarketplaceAction('hover', item._id, item.name, item.type, item.color)}
                       onClick={() => trackMarketplaceAction('view', item._id, item.name, item.type, item.color)}
                     >
-                      <div className="aspect-square bg-slate-100 overflow-hidden relative border-b border-slate-200">
+                      <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative border-b border-slate-200 flex items-center justify-center">
                         {item.imageUrl ? (
                           <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={item.name} />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center opacity-40">
-                            <Box className="w-12 h-12 text-indigo-500" />
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-4">
+                            <div className="w-24 h-24 rounded-2xl shadow-md" style={{ backgroundColor: item.color || '#cbd5e1' }}></div>
+                            <p className="text-xs text-slate-500 text-center font-medium">{item.name}</p>
                           </div>
                         )}
-                        <div className="absolute top-3 right-3 bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-black">
+                        <div className="absolute top-3 right-3 bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-black shadow-md">
                           ${item.price}
                         </div>
                       </div>
@@ -1091,7 +1136,7 @@ const App: React.FC = () => {
                         className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-50 text-white font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl transition-all"
                       >
                         <RefreshCw className="w-5 h-5" />
-                        {state.processingMode === 'room' ? 'VOXELIZE ROOM' : 'EXTRACT OBJECT'}
+                        {state.processingMode === 'room' ? 'CREATE ROOM' : 'ADD ITEM'}
                       </button>
                       <button onClick={() => setState(prev => ({ ...prev, image: null }))} className="p-4 bg-slate-800 text-slate-400 rounded-2xl">
                         <X className="w-5 h-5" />

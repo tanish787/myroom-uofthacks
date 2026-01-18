@@ -7,7 +7,9 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+// Increase payload limit to handle large base64 image uploads (up to 50MB)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -100,6 +102,10 @@ app.get('/marketplace', async (req, res) => {
       query = { name: { $regex: search, $options: 'i' } };
     }
     const items = await MarketplaceItem.find(query).sort({ createdAt: -1 });
+    console.log(`🛍️ [GET /marketplace] Returned ${items.length} items`);
+    items.forEach((item, idx) => {
+      console.log(`  Item ${idx + 1}: ${item.name} - Has image: ${!!item.imageUrl} (size: ${item.imageUrl?.length || 0} bytes)`);
+    });
     res.send(items);
   } catch (err) {
     res.status(500).send(err.message);
@@ -109,10 +115,13 @@ app.get('/marketplace', async (req, res) => {
 app.post('/marketplace', async (req, res) => {
   try {
     const { name, price, description, imageUrl, color, type, creator, data } = req.body;
+    console.log(`📸 [POST /marketplace] Creating listing: "${name}" - Image size: ${imageUrl?.length || 0} bytes`);
     const item = new MarketplaceItem({ name, price, description, imageUrl, color, type, creator, data });
     await item.save();
+    console.log(`✅ [POST /marketplace] Listing saved with ID: ${item._id}`);
     res.status(201).send(item);
   } catch (err) {
+    console.error(`❌ [POST /marketplace] Error:`, err.message);
     res.status(400).send(err.message);
   }
 });
