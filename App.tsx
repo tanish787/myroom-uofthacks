@@ -3036,80 +3036,74 @@ const App: React.FC = () => {
           )}
 
           {selectedObject && (
-            <div className="absolute bottom-8 left-8 w-80 bg-slate-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 border border-slate-700/50 text-white animate-in slide-in-from-left-4 z-20">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl shadow-inner border border-white/10" style={{ backgroundColor: selectedObject.color }}></div>
-                  <div>
-                    <h4 className="font-black text-base uppercase italic leading-none">{selectedObject.name}</h4>
-                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1 block">{selectedObject.type}</span>
+            <div className="absolute bottom-8 left-8 w-64 bg-slate-900/90 backdrop-blur-2xl rounded-xl shadow-2xl p-4 border border-slate-700/50 text-white animate-in slide-in-from-left-4 z-20">
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-lg shadow-inner border border-white/10 flex-shrink-0" style={{ backgroundColor: selectedObject.color }}></div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-black text-xs uppercase italic leading-tight truncate">{selectedObject.name}</h4>
+                    <span className="text-[7px] font-bold text-indigo-400 uppercase tracking-widest block truncate">{selectedObject.type}</span>
                   </div>
                 </div>
-                <button onClick={() => setState(prev => ({ ...prev, selectedObjectId: null, selectedPartIndex: null }))} className="p-1 hover:bg-slate-800 rounded-lg">
-                  <X className="w-5 h-5 text-slate-500" />
+                <button onClick={() => setState(prev => ({ ...prev, selectedObjectId: null, selectedPartIndex: null }))} className="p-0.5 hover:bg-slate-800 rounded flex-shrink-0">
+                  <X className="w-3.5 h-3.5 text-slate-500" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 text-[9px] font-black uppercase text-indigo-400/60">
-                  <div className="bg-slate-950/50 p-2 rounded-lg flex items-center gap-2 justify-center"><Move className="w-3 h-3" /> Arrows</div>
-                  <div className="bg-slate-950/50 p-2 rounded-lg flex items-center gap-2 justify-center"><span className="text-[10px]">Q / E</span> Vertical</div>
-                  <div className="bg-slate-950/50 p-2 rounded-lg flex items-center gap-2 justify-center"><RotateCw className="w-3 h-3" /> Key R</div>
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-0.5 text-[7px] font-bold uppercase text-indigo-400/60">
+                  <div className="bg-slate-950/50 p-1 rounded flex items-center justify-center whitespace-nowrap"><Move className="w-2 h-2 mr-0.5" />Arrows</div>
+                  <div className="bg-slate-950/50 p-1 rounded flex items-center justify-center whitespace-nowrap">Q/E</div>
+                  <div className="bg-slate-950/50 p-1 rounded flex items-center justify-center whitespace-nowrap"><RotateCw className="w-2 h-2 mr-0.5" />R</div>
                 </div>
 
                 {/* Components / Parts Editor */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      <Shapes className="w-3 h-3" /> Components
-                    </h5>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-1">
+                  <h5 className="text-[7px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-0.5">
+                    <Shapes className="w-2.5 h-2.5" /> Parts
+                  </h5>
+                  <div className="grid grid-cols-1 gap-0.5 max-h-20 overflow-y-auto pr-1 custom-scrollbar">
                     {(selectedObject.parts || []).map((part, idx) => (
                       <button
                         key={idx}
                         onClick={() => setState(prev => ({ ...prev, selectedPartIndex: prev.selectedPartIndex === idx ? null : idx }))}
-                        className={`flex items-center gap-3 p-2 rounded-xl border transition-all ${
+                        className={`flex items-center gap-1.5 p-1 rounded border text-[7px] transition-all truncate ${
                           state.selectedPartIndex === idx
                             ? 'bg-indigo-600/20 border-indigo-500 text-white'
                             : 'bg-slate-950/30 border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                       >
-                        <div className="w-4 h-4 rounded shadow-inner" style={{ backgroundColor: part.color || selectedObject.color }}></div>
-                        <span className="text-[9px] font-bold uppercase">Part {idx + 1}</span>
-                        {state.selectedPartIndex === idx && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>}
+                        <div className="w-2.5 h-2.5 rounded shadow-inner flex-shrink-0" style={{ backgroundColor: part.color || selectedObject.color }}></div>
+                        <span className="font-bold uppercase flex-1 truncate">P{idx + 1}</span>
+                        {state.selectedPartIndex === idx && <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse flex-shrink-0"></div>}
                       </button>
                     ))}
                   </div>
-                </div>
-
-                <div className="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
-                  <p className="text-[10px] text-slate-400 leading-relaxed italic">"{selectedObject.description}"</p>
                 </div>
 
                 <div className="flex gap-2">
                   {selectedObject.isUserCreated !== false && !roomItems.some(ri => ri.objectId === selectedObject.id) && (
                     <button
                       onClick={addToToolbox}
-                      className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all"
+                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-[9px] font-bold uppercase flex items-center justify-center gap-1 shadow-lg shadow-indigo-600/20 transition-all"
                     >
-                      <PackagePlus className="w-4 h-4" /> Add to Cart
+                      <PackagePlus className="w-3 h-3" /> Cart
                     </button>
                   )}
                   {state.user && state.user.accountType === 'seller' && (
                     selectedObject.isUserCreated !== false ? (
                       <button
                         onClick={() => setState(prev => ({ ...prev, showListingCreator: true }))}
-                        className="flex-1 py-3 bg-slate-900 border border-slate-800 text-indigo-400 text-[10px] font-black uppercase rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all"
+                        className="flex-1 py-2 bg-slate-800 border border-slate-700 text-indigo-400 text-[9px] font-bold uppercase rounded-lg flex items-center justify-center gap-1 hover:bg-slate-700 transition-all"
                       >
-                        <ShoppingBag className="w-4 h-4" /> Sell
+                        <ShoppingBag className="w-3 h-3" /> Sell
                       </button>
                     ) : (
                       <button
                         disabled
-                        className="flex-1 py-3 bg-red-600/20 border border-red-500/30 text-red-400 text-[10px] font-black uppercase rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
+                        className="flex-1 py-2 bg-red-600/20 border border-red-500/30 text-red-400 text-[9px] font-bold uppercase rounded-lg flex items-center justify-center gap-1 cursor-not-allowed"
                       >
-                        <X className="w-4 h-4" /> Can't sell
+                        <X className="w-3 h-3" />
                       </button>
                     )
                   )}
